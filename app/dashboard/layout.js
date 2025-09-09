@@ -10,7 +10,7 @@ const DashboardLayout = ({ children }) => {
         </div>
         <div className="">
           <Header />
-          <div className="md:ml-64">{children}</div>
+          <div className="md:ml-64 p-10">{children}</div>
         </div>
       </div>
     </div>
