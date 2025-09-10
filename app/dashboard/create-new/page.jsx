@@ -15,6 +15,22 @@ const page = () => {
   useEffect(() => {
     console.log(formData);
   }, [formData]);
+
+  const getVideoScript = async () => {
+    const prompt =
+      "Write a script to generate " +
+      formData.duration +
+      " video on topic: " +
+      formData.topic +
+      " along with AI generated image prompt in " +
+      formData.imageStyle +
+      " format for each scene and give me result in JSON format with imagePrompt and contextText (scene) fields";
+
+    console.log(prompt);
+    // const { data } = await axios.post("api/get-video-script", {
+    //   prompt: prompt,
+    // });
+  };
   return (
     <div className="md:px-20">
       <h2 className="text-center text-primary font-bold text-4xl">
@@ -29,7 +45,10 @@ const page = () => {
         {/* Select Duration */}
         <SelectDuration onUserSelect={onUserSelect} />
         {/* Create Button */}
-        <Button className="mt-8 w-full font-semibold text-[15px] cursor-pointer">
+        <Button
+          className="mt-8 w-full font-semibold text-[15px] cursor-pointer"
+          onClick={getVideoScript}
+        >
           Create Short Video
         </Button>
       </div>
