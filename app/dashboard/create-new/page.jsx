@@ -4,6 +4,7 @@ import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 const page = () => {
   const [formData, setFormData] = useState({});
@@ -24,12 +25,14 @@ const page = () => {
       formData.topic +
       " along with AI generated image prompt in " +
       formData.imageStyle +
-      " format for each scene and give me result in JSON format with imagePrompt and contextText (scene) fields";
+      " format for each scene and give me result in JSON format with imagePrompt and contextText (scene) fields, no plain text";
 
     console.log(prompt);
-    // const { data } = await axios.post("api/get-video-script", {
-    //   prompt: prompt,
-    // });
+    const { data } = await axios.post("/api/get-video-script", {
+      prompt: prompt,
+    });
+
+    console.log("Data from axios:", data.result);
   };
   return (
     <div className="md:px-20">

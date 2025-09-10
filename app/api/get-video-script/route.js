@@ -8,10 +8,10 @@ export async function POST(req) {
 
     const result = await getGeminiResponse(prompt);
     console.log("result of gemini:", result);
-
+    const cleanResult = result.replace(/```json|```/g, "").trim();
     return NextResponse.json({
       success: true,
-      result: JSON.parse(result),
+      result: JSON.parse(cleanResult),
     });
   } catch (error) {
     console.log("error in getting video script", error);
