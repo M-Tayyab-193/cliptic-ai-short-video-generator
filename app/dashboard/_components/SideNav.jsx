@@ -34,7 +34,7 @@ const SideNav = () => {
     },
   ];
   return (
-    <div className="w-full h-full shadow-md p-5">
+    <div className="w-full h-full shadow-md p-5 overflow-hidden">
       <div className="grid gap-3">
         {menuOptions.map((option) => (
           <Link href={option.path} key={option.id}>
