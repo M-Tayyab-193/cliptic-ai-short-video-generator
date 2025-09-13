@@ -8,7 +8,14 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import Loader from "./_components/Loader";
 import { v4 as uuidv4 } from "uuid";
+import { useContext } from "react";
+import { VideoDataContext } from "@/app/_context/VideoDataContext";
+import { db } from "@/config/db";
+import { useUser } from "@clerk/nextjs";
+import { VideoData } from "@/config/schema";
 const page = () => {
+  const { user } = useUser();
+  const { videoData, setVideoData } = useContext(VideoDataContext);
   const [formData, setFormData] = useState({});
   const [isCreating, setIsCreating] = useState({
     status: false,
@@ -55,6 +62,19 @@ const page = () => {
     }
   }, [imageURLs]);
 
+  useEffect(() => {
+    videoData && console.log("Video Data Updated:", videoData);
+    if (
+      videoData.length === 4 &&
+      videoData[0].videoScript &&
+      videoData[1].audioURL &&
+      videoData[2].captions &&
+      videoData[3].imageURLs
+    ) {
+      saveVideoData();
+    }
+  }, [videoData]);
+
   const getVideoScript = async () => {
     setIsCreating({ status: true, message: "Generating video script..." });
     if (!formData.topic || !formData.duration || !formData.imageStyle) {
@@ -69,7 +89,7 @@ const page = () => {
       formData.topic +
       " along with AI generated image prompt in " +
       formData.imageStyle +
-      " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text and make sure to give result in max - 1000 characters";
+      " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text";
 
     console.log(prompt);
     const { data } = await axios.post("/api/get-video-script", {
@@ -77,6 +97,7 @@ const page = () => {
     });
     if (data.success) {
       setVideoScript(data.result);
+      setVideoData((prev) => [...prev, { videoScript: data.result }]);
     }
   };
 
@@ -95,7 +116,9 @@ const page = () => {
     });
     if (data.success) {
       console.log("Audio generated successfully");
+      setVideoData((prev) => [...prev, { audioURL: data.result.downloadURL }]);
       setAudioURL(data.result.downloadURL);
+
       setIsCreating({ status: false, message: "" });
     }
   };
@@ -107,6 +130,7 @@ const page = () => {
     });
     if (data.success) {
       console.log("Captions generated successfully", data.result);
+      setVideoData((prev) => [...prev, { captions: data.result }]);
       setIsCreating({ status: false, message: "" });
       setCaptions(data.result);
     }
@@ -123,12 +147,38 @@ const page = () => {
         .filter((res) => res.data.success)
         .map((res) => res.data.imageUrl);
       setImageURLs(urls);
+      setVideoData((prev) => [...prev, { imageURLs: urls }]);
       setIsCreating({ status: false, message: "" });
       console.log("Images generated successfully");
     } catch (error) {
       setIsCreating({ status: false, message: "Error generating images" });
       console.error(error);
     }
+  };
+
+  const saveVideoData = async () => {
+    setIsCreating({ status: true, message: "Saving video data..." });
+    const videoRecord = {
+      videoScript: videoData[0]?.videoScript || {},
+      audioURL: videoData[1]?.audioURL || "",
+      captions: videoData[2]?.captions || [],
+      imageURLs: Array.isArray(videoData[3]?.imageURLs)
+        ? videoData[3].imageURLs
+        : Object.values(videoData[3]?.imageURLs || {}),
+      createdBy: user?.primaryEmailAddress?.emailAddress || "anonymous",
+    };
+
+    // Insert into DB and return the new id
+    const result = await db
+      .insert(VideoData)
+      .values(videoRecord)
+      .returning({ id: VideoData.id });
+
+    if (result.length > 0) {
+      setIsCreating({ status: false, message: "" });
+    }
+
+    console.log("Saved video record:", result);
   };
   return (
     <div className="md:px-20">
