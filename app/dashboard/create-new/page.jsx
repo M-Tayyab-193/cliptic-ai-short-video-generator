@@ -10,9 +10,13 @@ import Loader from "./_components/Loader";
 import { v4 as uuidv4 } from "uuid";
 const page = () => {
   const [formData, setFormData] = useState({});
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState({
+    status: false,
+    message: "",
+  });
   const [videoScript, setVideoScript] = useState([]);
   const [audioURL, setAudioURL] = useState("");
+  const [captions, setCaptions] = useState([]);
 
   const onUserSelect = (field, value) => {
     console.log(field, value);
@@ -29,15 +33,25 @@ const page = () => {
       generateAudioFile();
     }
   }, [videoScript]);
+
   useEffect(() => {
-    audioURL && console.log("Audio URL:", audioURL);
+    if (audioURL) {
+      console.log("Audio URL:", audioURL);
+      generateCaptions();
+    }
   }, [audioURL]);
 
+  useEffect(() => {
+    if (captions.length > 0) {
+      console.log("Captions:", captions);
+    }
+  }, [captions]);
+
   const getVideoScript = async () => {
-    setIsCreating(true);
+    setIsCreating({ status: true, message: "Generating video script..." });
     if (!formData.topic || !formData.duration || !formData.imageStyle) {
       toast.error("Please select all the fields");
-      setIsCreating(false);
+      setIsCreating({ status: false, message: "" });
       return;
     }
     const prompt =
@@ -59,6 +73,7 @@ const page = () => {
   };
 
   const generateAudioFile = async () => {
+    setIsCreating({ status: true, message: "Generating audio file..." });
     let script = "";
     const id = uuidv4();
     videoScript.forEach((scene) => {
@@ -73,7 +88,19 @@ const page = () => {
     if (data.success) {
       console.log("Audio generated successfully");
       setAudioURL(data.result.downloadURL);
-      setIsCreating(false);
+      setIsCreating({ status: false, message: "" });
+    }
+  };
+
+  const generateCaptions = async () => {
+    setIsCreating({ status: true, message: "Generating captions..." });
+    const { data } = await axios.post("/api/generate-captions", {
+      audioURL: audioURL,
+    });
+    if (data.success) {
+      console.log("Captions generated successfully", data.result);
+      setIsCreating({ status: false, message: "" });
+      setCaptions(data.result);
     }
   };
   return (
@@ -93,9 +120,9 @@ const page = () => {
         <Button
           className="mt-8 w-full font-semibold text-[15px] cursor-pointer"
           onClick={getVideoScript}
-          disabled={isCreating}
+          disabled={isCreating.status}
         >
-          {isCreating ? "Creating..." : "Create Short Video"}
+          {isCreating.status ? isCreating.message : "Create Short Video"}
         </Button>
       </div>
       <Loader loading={isCreating} />

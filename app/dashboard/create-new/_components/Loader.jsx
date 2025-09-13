@@ -7,7 +7,7 @@ import Image from "next/image";
 
 const Loader = ({ loading }) => {
   return (
-    <AlertDialog open={loading}>
+    <AlertDialog open={loading.status}>
       <AlertDialogContent className="bg-white">
         <AlertDialogTitle>Processing</AlertDialogTitle>
         <div className="flex flex-col gap-3 items-center justify-center p-8">
@@ -18,7 +18,7 @@ const Loader = ({ loading }) => {
             height={100}
             className="object-cover"
           />
-          <h2>Generating your video... Do not refresh the page</h2>
+          <h2>{loading.message} Please do not refresh the page</h2>
         </div>
       </AlertDialogContent>
     </AlertDialog>
