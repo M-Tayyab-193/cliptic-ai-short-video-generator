@@ -17,6 +17,7 @@ const page = () => {
   const [videoScript, setVideoScript] = useState([]);
   const [audioURL, setAudioURL] = useState("");
   const [captions, setCaptions] = useState([]);
+  const [imageURLs, setImageURLs] = useState([]);
 
   const onUserSelect = (field, value) => {
     console.log(field, value);
@@ -44,8 +45,15 @@ const page = () => {
   useEffect(() => {
     if (captions.length > 0) {
       console.log("Captions:", captions);
+      generateImages();
     }
   }, [captions]);
+
+  useEffect(() => {
+    if (imageURLs.length > 0) {
+      console.log("Image URLs:", imageURLs);
+    }
+  }, [imageURLs]);
 
   const getVideoScript = async () => {
     setIsCreating({ status: true, message: "Generating video script..." });
@@ -61,7 +69,7 @@ const page = () => {
       formData.topic +
       " along with AI generated image prompt in " +
       formData.imageStyle +
-      " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text";
+      " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text and make sure to give result in max - 1000 characters";
 
     console.log(prompt);
     const { data } = await axios.post("/api/get-video-script", {
@@ -101,6 +109,25 @@ const page = () => {
       console.log("Captions generated successfully", data.result);
       setIsCreating({ status: false, message: "" });
       setCaptions(data.result);
+    }
+  };
+
+  const generateImages = async () => {
+    setIsCreating({ status: true, message: "Generating images..." });
+    try {
+      const imagePromises = videoScript.map((scene) =>
+        axios.post("/api/generate-image", { prompt: scene.imagePrompt })
+      );
+      const responses = await Promise.all(imagePromises);
+      const urls = responses
+        .filter((res) => res.data.success)
+        .map((res) => res.data.imageUrl);
+      setImageURLs(urls);
+      setIsCreating({ status: false, message: "" });
+      console.log("Images generated successfully");
+    } catch (error) {
+      setIsCreating({ status: false, message: "Error generating images" });
+      console.error(error);
     }
   };
   return (
