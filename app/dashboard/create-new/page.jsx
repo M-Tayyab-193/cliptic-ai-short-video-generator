@@ -4,10 +4,14 @@ import SelectTopic from "./_components/SelectTopic";
 import SelectStyle from "./_components/SelectStyle";
 import SelectDuration from "./_components/SelectDuration";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import axios from "axios";
-
+import Loader from "./_components/Loader";
 const page = () => {
   const [formData, setFormData] = useState({});
+  const [isCreating, setIsCreating] = useState(false);
+  const [videoScript, setVideoScript] = useState([]);
+
   const onUserSelect = (field, value) => {
     console.log(field, value);
     setFormData({ ...formData, [field]: value });
@@ -17,22 +21,34 @@ const page = () => {
     console.log(formData);
   }, [formData]);
 
+  useEffect(() => {
+    console.log("Updated Video Script:", videoScript);
+  }, [videoScript]);
+
   const getVideoScript = async () => {
+    setIsCreating(true);
+    if (!formData.topic || !formData.duration || !formData.imageStyle) {
+      toast.error("Please select all the fields");
+      setIsCreating(false);
+      return;
+    }
     const prompt =
       "Write a script to generate " +
       formData.duration +
-      " video on topic: " +
+      " video on " +
       formData.topic +
       " along with AI generated image prompt in " +
       formData.imageStyle +
-      " format for each scene and give me result in JSON format with imagePrompt and contextText (scene) fields, no plain text";
+      " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text";
 
     console.log(prompt);
     const { data } = await axios.post("/api/get-video-script", {
       prompt: prompt,
     });
-
-    console.log("Data from axios:", data.result);
+    if (data.success) {
+      setIsCreating(false);
+      setVideoScript(data.result);
+    }
   };
   return (
     <div className="md:px-20">
@@ -51,10 +67,12 @@ const page = () => {
         <Button
           className="mt-8 w-full font-semibold text-[15px] cursor-pointer"
           onClick={getVideoScript}
+          disabled={isCreating}
         >
-          Create Short Video
+          {isCreating ? "Creating..." : "Create Short Video"}
         </Button>
       </div>
+      <Loader loading={isCreating} />
     </div>
   );
 };

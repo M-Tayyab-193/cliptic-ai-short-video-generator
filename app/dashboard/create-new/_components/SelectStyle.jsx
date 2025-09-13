@@ -30,7 +30,7 @@ const SelectStyle = ({ onUserSelect }) => {
       <h2 className="font-bold text-xl text-primary">Style</h2>
       <p className="text-gray-500 mt-1">Select your video style</p>
 
-      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2">
+      <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-2">
         {STYLES.map((style, index) => (
           <div
             key={index}
