@@ -13,6 +13,7 @@ import { VideoDataContext } from "@/app/_context/VideoDataContext";
 import { db } from "@/config/db";
 import { useUser } from "@clerk/nextjs";
 import { VideoData } from "@/config/schema";
+import PlayerDialog from "../_components/PlayerDialog";
 const page = () => {
   const { user } = useUser();
   const { videoData, setVideoData } = useContext(VideoDataContext);
@@ -25,6 +26,8 @@ const page = () => {
   const [audioURL, setAudioURL] = useState("");
   const [captions, setCaptions] = useState([]);
   const [imageURLs, setImageURLs] = useState([]);
+  const [playVideo, setPlayVideo] = useState(true);
+  const [videoId, setVideoId] = useState(1);
 
   const onUserSelect = (field, value) => {
     console.log(field, value);
@@ -176,6 +179,8 @@ const page = () => {
 
     if (result.length > 0) {
       setIsCreating({ status: false, message: "" });
+      setVideoId(result[0].id);
+      setPlayVideo(true);
     }
 
     console.log("Saved video record:", result);
@@ -203,6 +208,7 @@ const page = () => {
         </Button>
       </div>
       <Loader loading={isCreating} />
+      <PlayerDialog playVideo={playVideo} videoId={videoId} />
     </div>
   );
 };
