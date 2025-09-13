@@ -35,7 +35,7 @@ const SelectStyle = ({ onUserSelect }) => {
           <div
             key={index}
             className={`rounded-lg border border-gray-200 w-[85%] relative cursor-pointer  hover:scale-105 transition-transform duration-300 ${
-              selectedStyle === style.name && "border-2 border-primary"
+              selectedStyle === style.name && "border-3 border-primary"
             }`}
           >
             <Image

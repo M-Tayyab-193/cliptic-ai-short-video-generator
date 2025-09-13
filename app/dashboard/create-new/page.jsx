@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import axios from "axios";
 import Loader from "./_components/Loader";
+import { v4 as uuidv4 } from "uuid";
 const page = () => {
   const [formData, setFormData] = useState({});
   const [isCreating, setIsCreating] = useState(false);
@@ -23,6 +24,9 @@ const page = () => {
 
   useEffect(() => {
     console.log("Updated Video Script:", videoScript);
+    if (videoScript.length > 0) {
+      generateAudioFile();
+    }
   }, [videoScript]);
 
   const getVideoScript = async () => {
@@ -49,6 +53,25 @@ const page = () => {
       setIsCreating(false);
       setVideoScript(data.result);
     }
+  };
+
+  const generateAudioFile = async () => {
+    setIsCreating(true);
+    let script = "";
+    const id = uuidv4();
+    videoScript.forEach((scene) => {
+      script += scene.contextText + " ";
+    });
+
+    const { data } = await axios.post("/api/generate-audio", {
+      text: script,
+      id,
+    });
+    if (data.success) {
+      console.log("Audio generated successfully");
+      setIsCreating(false);
+    }
+    console.log("Full Script:", script);
   };
   return (
     <div className="md:px-20">
