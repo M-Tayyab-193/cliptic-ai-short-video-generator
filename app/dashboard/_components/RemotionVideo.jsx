@@ -3,6 +3,7 @@ import {
   AbsoluteFill,
   Audio,
   Img,
+  interpolate,
   Sequence,
   useCurrentFrame,
   useVideoConfig,
@@ -25,20 +26,14 @@ const RemotionVideo = ({
 
   const getCurrentCaption = () => {
     if (!captions?.length) return ""; // fallback
-
-    // convert frame to ms using fps
-    const currentTime = (frame / fps) * 1000;
-
-    const currentCaption = captions.find((caption) => {
-      const start = caption.start; // already in ms
-      const end = caption.end; // already in ms
-      return currentTime >= start && currentTime <= end;
-    });
-
-    return currentCaption ? currentCaption.text : ""; // safe return
+    const currentTime = (frame / fps) * 1000; // convert to ms
+    const currentCaption = captions.find(
+      (caption) => currentTime >= caption.start && currentTime <= caption.end
+    );
+    return currentCaption ? currentCaption.text : "";
   };
 
-  // Calculate duration safely after render
+  // Set video duration dynamically
   useEffect(() => {
     if (captions?.length > 0) {
       const lastEnd = captions[captions.length - 1]?.end;
@@ -51,42 +46,90 @@ const RemotionVideo = ({
 
   return (
     <AbsoluteFill className="bg-black w-full h-full">
-      {imageURLs.map((url, index) => (
-        <Sequence
-          key={index}
-          from={(index * getDurationFrames()) / imageURLs?.length}
-          durationInFrames={getDurationFrames()}
-        >
-          <Img
-            src={url}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
+      {imageURLs.map((url, index) => {
+        const totalDuration = getDurationFrames();
+        const imgDuration = totalDuration / imageURLs.length;
+        const startTime = index * imgDuration;
 
-          {/* Caption */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "50px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              fontSize: "20px",
-              maxWidth: "80%",
-              textAlign: "center",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {getCurrentCaption()}
-          </div>
-        </Sequence>
-      ))}
+        // Animations
+        const localFrame = frame - startTime;
+
+        const scale = interpolate(
+          localFrame,
+          [0, imgDuration],
+          [1, 1.2], // zoom-in
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+
+        const translateX = interpolate(
+          localFrame,
+          [0, imgDuration],
+          [0, -30], // slight pan left
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+
+        const opacity = interpolate(
+          localFrame,
+          [0, 20, imgDuration - 20, imgDuration],
+          [0, 1, 1, 0], // fade in + fade out
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+
+        // Caption fade in/out
+        const captionOpacity = interpolate(
+          localFrame,
+          [0, 15, imgDuration - 15, imgDuration],
+          [0, 1, 1, 0],
+          { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+        );
+
+        return (
+          <Sequence key={index} from={startTime} durationInFrames={imgDuration}>
+            {/* Background image with Ken Burns + crossfade */}
+            <Img
+              src={url}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${scale}) translate(${translateX}px, 0px)`,
+                opacity,
+              }}
+            />
+
+            {/* Cinematic gradient overlay */}
+            <AbsoluteFill
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.7), transparent 60%)",
+              }}
+            />
+
+            {/* Captions */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "50px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                fontSize: "22px",
+                maxWidth: "80%",
+                textAlign: "center",
+                whiteSpace: "pre-wrap",
+                opacity: captionOpacity,
+              }}
+            >
+              {getCurrentCaption()}
+            </div>
+          </Sequence>
+        );
+      })}
+
+      {/* Audio track */}
       <Audio src={audioURL} />
     </AbsoluteFill>
   );

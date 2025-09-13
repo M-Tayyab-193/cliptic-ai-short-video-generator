@@ -36,7 +36,7 @@ const PlayerDialog = ({ playVideo, videoId }) => {
   };
 
   return (
-    <Dialog open={openDialog}>
+    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <DialogContent className="bg-white flex flex-col items-center">
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold my-5 text-center">
@@ -61,7 +61,11 @@ const PlayerDialog = ({ playVideo, videoId }) => {
                 <p className="text-gray-500">Loading video...</p>
               )}
               <div className="mt-6 flex items-center gap-10 justify-center w-full px-4">
-                <Button className="cursor-pointer" variant="ghost">
+                <Button
+                  className="cursor-pointer"
+                  variant="ghost"
+                  onClick={() => setOpenDialog(false)}
+                >
                   Cancel
                 </Button>
                 <Button className="cursor-pointer">Export</Button>

@@ -26,8 +26,8 @@ const page = () => {
   const [audioURL, setAudioURL] = useState("");
   const [captions, setCaptions] = useState([]);
   const [imageURLs, setImageURLs] = useState([]);
-  const [playVideo, setPlayVideo] = useState(true);
-  const [videoId, setVideoId] = useState(1);
+  const [playVideo, setPlayVideo] = useState(false);
+  const [videoId, setVideoId] = useState(null);
 
   const onUserSelect = (field, value) => {
     console.log(field, value);
@@ -88,9 +88,9 @@ const page = () => {
     const prompt =
       "Write a script to generate " +
       formData.duration +
-      " video on " +
+      " video on '" +
       formData.topic +
-      " along with AI generated image prompt in " +
+      "' along with AI generated image prompt in " +
       formData.imageStyle +
       " format for each scene and give me result in JSON format with only imagePrompt and contextText (scene) fields for each scene, no plain text";
 
@@ -115,6 +115,7 @@ const page = () => {
     console.log("Full Script:", script);
     const { data } = await axios.post("/api/generate-audio", {
       text: script,
+      topic: formData.topic,
       id,
     });
     if (data.success) {
