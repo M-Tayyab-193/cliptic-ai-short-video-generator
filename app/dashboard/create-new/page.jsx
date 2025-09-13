@@ -12,6 +12,7 @@ const page = () => {
   const [formData, setFormData] = useState({});
   const [isCreating, setIsCreating] = useState(false);
   const [videoScript, setVideoScript] = useState([]);
+  const [audioURL, setAudioURL] = useState("");
 
   const onUserSelect = (field, value) => {
     console.log(field, value);
@@ -23,11 +24,14 @@ const page = () => {
   }, [formData]);
 
   useEffect(() => {
-    console.log("Updated Video Script:", videoScript);
     if (videoScript.length > 0) {
+      console.log("Video Script:", videoScript);
       generateAudioFile();
     }
   }, [videoScript]);
+  useEffect(() => {
+    audioURL && console.log("Audio URL:", audioURL);
+  }, [audioURL]);
 
   const getVideoScript = async () => {
     setIsCreating(true);
@@ -50,28 +54,27 @@ const page = () => {
       prompt: prompt,
     });
     if (data.success) {
-      setIsCreating(false);
       setVideoScript(data.result);
     }
   };
 
   const generateAudioFile = async () => {
-    setIsCreating(true);
     let script = "";
     const id = uuidv4();
     videoScript.forEach((scene) => {
       script += scene.contextText + " ";
     });
 
+    console.log("Full Script:", script);
     const { data } = await axios.post("/api/generate-audio", {
       text: script,
       id,
     });
     if (data.success) {
       console.log("Audio generated successfully");
+      setAudioURL(data.result.downloadURL);
       setIsCreating(false);
     }
-    console.log("Full Script:", script);
   };
   return (
     <div className="md:px-20">
